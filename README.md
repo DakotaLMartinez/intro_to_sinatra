@@ -1229,7 +1229,20 @@ Our form has inputs for `imageUrl`, `title`, `artistName`, `date`, `width`, & `h
 - `artistName` is actually `artist_id` in our db. For this, we'll want to add a method called `artist_name` to the `Painting` model that can:
   - accept an artist_name as an argument 
   - find_or_create an artist by that name
-  - associate the painting with that created artist 
+  - associate the painting with that created artist
+
+  ```rb
+  class Painting < ActiveRecord::Base
+    belongs_to :artist
+    validates :title, :image, presence: true
+    validates :slug, uniqueness: true
+
+    def artist_name=(artist_name)
+      self.artist = Artist.find_or_create_by(name: artist_name)
+    end
+  end
+  ```
+From the react end, we'll configure our fetch to send the body in such a way that our Sinatra API backend will be able to use the data to create a new Painting (and associated artist)
 ```js
 // ... imports
 
@@ -1268,7 +1281,7 @@ function PaintingForm() {
   // ...
 ```
 
-Now, let's try this out by visiting our app in the react dev server and filling in the form with these values:
+Now, let's try this out by visiting our app in the react dev server and seeing if we can see the form data from react within our sinatra api backend. We'll be using the following values:
 
 **imgUrl**
 ```
@@ -1303,8 +1316,23 @@ Now, if we visit the app in the browser, fill in the form to create a new painti
 
 Now that we have this, all we need is to:
 - Painting.create(params)
-  - This is actually unsafe, so it would be better to select just what we want first:
+  - This is actually unsafe, as it would allow users to call whatever method they would want on the new painting object. So, it would be better to select just what we want from the params hash first:
   ```rb
-  painting_params = params.select{|key| ["image", "title", "artist_name", "date", "width", "height"].include?(key)}
+  painting_params = params.select do |key| 
+    ["image", "title", "artist_name", "date", "width", "height"].include?(key)
+  end
   Painting.create(painting_params)
   ```
+
+So the route in our controller will look like this:
+
+```rb
+  post "/new_painting" do 
+    puts params.inspect
+    painting_params = params.select do |key|
+      ["image", "title", "artist_name", "date", "width", "height"].include?(key)
+    end
+    painting = Painting.create(painting_params)
+    painting.to_json
+  end
+```

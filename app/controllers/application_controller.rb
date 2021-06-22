@@ -18,5 +18,13 @@ class ApplicationController < Sinatra::Base
     
   # end
   
+  post "/new_painting" do 
+    puts params.inspect
+    painting_params = params.select do |key|
+      ["image", "title", "artist_name", "date", "width", "height"].include?(key)
+    end
+    painting = Painting.create(painting_params)
+    painting.to_json
+  end
 
 end
