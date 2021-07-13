@@ -236,7 +236,7 @@ Models should be familiar at this point, so the new concepts are the Controller 
 
 For the example today, we'll be building a Sinatra API to go withthe Sinatra Paintr app that we built in Phase 2.
 
-# Where does React code live? Separate Repo???
+# [Paintr](https://github.com/DakotaLMartinez/paintr_react) App
 
 Let's speed through the first part of this process as we've done it a bit with other domains at this point. Here's a sample of a domain model plan matching the format presented last week.
 
@@ -506,7 +506,7 @@ class CreatePaintings < ActiveRecord::Migration[5.2]
       t.string :date
       t.float :width
       t.float :height
-      t.string :collection_institution
+      t.string :collecting_institution
       t.float :depth
       t.float :diameter
       t.string :slug
@@ -794,7 +794,7 @@ We should see something like this:
  deathday: "1475">
 ```
 
-Okay, now that we've got artists and paintings in our database, let's work on getting them into the browser when we make a request to an api endpoint. To do that, we'll add another method to the `ApplicationController`. Within it, we'll want to get all of the artists and then [convert the collection to JSON](https://apidock.com/rails/ActiveRecord/Serialization/to_json). 
+Okay, now that we've got artists and paintings in our database, let's work on getting them into the browser when we make a request to an api endpoint. To do that, we'll add another method to the `ApplicationController`. Within it, we'll want to get all of the paintings and then [convert the collection to JSON](https://apidock.com/rails/ActiveRecord/Serialization/to_json). 
 
 ```rb
 # app/controllers/application_controller.rb
@@ -1327,12 +1327,32 @@ Now that we have this, all we need is to:
 So the route in our controller will look like this:
 
 ```rb
-  post "/new_painting" do 
-    puts params.inspect
-    painting_params = params.select do |key|
-      ["image", "title", "artist_name", "date", "width", "height"].include?(key)
-    end
-    painting = Painting.create(painting_params)
-    painting.to_json
+post "/new_painting" do 
+  puts params.inspect
+  painting_params = params.select do |key|
+    ["image", "title", "artist_name", "date", "width", "height"].include?(key)
   end
+  painting = Painting.create(painting_params)
+  painting.to_json
+end
 ```
+
+## Handling Upvoting
+
+If we wanted to handle upvoting within the current domain model, we would be updating a painting. So, in that case, we'd want to send a patch request to make the update. Because we're only going to be handling updating the votes by one, we don't need to send any additional information with the request. But, we do need to have a way of identifying which painting we're updating. We can do this in one of two ways:
+
+1. Include a URL parameter for the painting's id in the route we create
+2. Add the painting's id to the body of the patch request we send
+
+While both would work, if we're trying to figure out which record to update, we'll generally see that done with the 1st path.
+
+```rb
+# app/controllers/application_controller.rb
+patch "/paintings/:id/upvote" do 
+  painting = Painting.find(params[:id])
+  painting.increment!(:votes)
+  painting.to_json
+end
+```
+
+If we rework our react component, we can tweak it so that it sends a fetch request to update the backend and only update the DOM after the response from the API is received.
