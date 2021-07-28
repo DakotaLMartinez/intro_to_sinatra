@@ -7,7 +7,7 @@ class CreatePaintings < ActiveRecord::Migration[5.2]
       t.string :dimensions_text
       t.float :width
       t.float :height
-      t.string :collection_institution
+      t.string :collecting_institution
       t.float :depth
       t.float :diameter
       t.string :slug

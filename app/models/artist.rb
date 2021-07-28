@@ -1,5 +1,5 @@
 class Artist < ActiveRecord::Base
   has_many :paintings
 
-  validates :name, presence: true
+  # validates :name, presence: true
 end

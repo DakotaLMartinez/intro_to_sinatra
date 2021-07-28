@@ -13,7 +13,24 @@ class ApplicationController < Sinatra::Base
     response.headers["Access-Control-Allow-Headers"] = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Cache-Control, Accept"
     200
   end
+  get "/paintings" do 
+    paintings = Painting.all
+    paintings.to_json(include: :artist)
+  end
 
+  # post "/new_painting" do 
+  #   painting_params = params.select do |k,v|
+  #     ["image", "title", "artist_name", "date", "width", "height"].include?(k)
+  #   end
+  #   painting = Painting.create(painting_params)
+  #   painting.to_json(include: :artist)
+  # end
+
+  patch "/paintings/:id/upvote" do 
+    painting = Painting.find(params[:id])
+    painting.increment!(:votes)
+    painting.to_json(include: :artist)
+  end
   # method "URL" do
     
   # end
@@ -23,6 +40,7 @@ class ApplicationController < Sinatra::Base
     painting_params = params.select do |key|
       ["image", "title", "artist_name", "date", "width", "height"].include?(key)
     end
+    binding.pry
     painting = Painting.create(painting_params)
     painting.to_json
   end

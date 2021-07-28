@@ -504,6 +504,7 @@ class CreatePaintings < ActiveRecord::Migration[5.2]
       t.string :image, null: false
       t.string :title, null: false
       t.string :date
+      t.string :dimensions_text
       t.float :width
       t.float :height
       t.string :collecting_institution
